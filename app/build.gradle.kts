@@ -33,36 +33,40 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    // Enable View Binding
+    // Enable ViewBinding
     buildFeatures {
         viewBinding = true
     }
 }
 
 dependencies {
+    // Core & UI
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
 
-    // --- ADD THESE DEPENDENCIES FOR NETWORKING AND ASYNC TASKS ---
-    // Retrofit for networking
+    // ViewPager2 for tabs
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+
+    // Networking with Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    // GSON converter for Retrofit to handle JSON
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
-    // OkHttp logging interceptor to see network requests in Logcat (for debugging)
-    implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
 
     // Coroutines for asynchronous programming
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1")
 
-    // Lifecycle components for observing data and managing UI lifecycle
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
-    // --- END OF NEW DEPENDENCIES ---
+    // Lifecycle components for Coroutines scope
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.1")
 
+    // Image Loading with Glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    // Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

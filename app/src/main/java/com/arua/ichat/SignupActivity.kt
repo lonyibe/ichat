@@ -1,23 +1,39 @@
 package com.arua.ichat
 
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.arua.ichat.databinding.ActivitySignupBinding
-import com.arua.ichat.network.AuthRequest
 import com.arua.ichat.network.RetrofitClient
+import com.arua.ichat.network.TokenManager
 import kotlinx.coroutines.launch
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.File
+import java.io.FileOutputStream
 
 class SignupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignupBinding
+    private var selectedImageUri: Uri? = null
+
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            selectedImageUri = it
+            binding.profileImageView.setImageURI(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +47,10 @@ class SignupActivity : AppCompatActivity() {
             insets
         }
 
+        binding.profileImageView.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+
         binding.signupButton.setOnClickListener {
             val username = binding.usernameEditText.text.toString().trim()
             val password = binding.passwordEditText.text.toString().trim()
@@ -42,23 +62,33 @@ class SignupActivity : AppCompatActivity() {
             }
         }
 
-        // --- ADD THIS ONCLICKLISTENER ---
         binding.loginTextView.setOnClickListener {
-            // Simply finish this activity to go back to the LoginActivity on the stack
             finish()
         }
-        // --- END OF NEW CODE ---
     }
 
     private fun signupUser(username: String, password: String) {
         showLoading(true)
+
+        val usernamePart = username.toRequestBody("text/plain".toMediaTypeOrNull())
+        val passwordPart = password.toRequestBody("text/plain".toMediaTypeOrNull())
+
+        var imagePart: MultipartBody.Part? = null
+        selectedImageUri?.let { uri ->
+            val file = getFileFromUri(uri)
+            file?.let {
+                val requestFile = it.asRequestBody("image/*".toMediaTypeOrNull())
+                imagePart = MultipartBody.Part.createFormData("pic", it.name, requestFile)
+            }
+        }
+
         lifecycleScope.launch {
             try {
-                val response = RetrofitClient.instance.signupUser(AuthRequest(username, password))
+                val response = RetrofitClient.instance.signupUser(usernamePart, passwordPart, imagePart)
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
+                    TokenManager.saveToken(this@SignupActivity, authResponse.token)
                     Toast.makeText(this@SignupActivity, "Account Created!", Toast.LENGTH_SHORT).show()
-                    Log.d("SignupActivity", "Token: ${authResponse.token}")
 
                     val intent = Intent(this@SignupActivity, MainActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -76,10 +106,23 @@ class SignupActivity : AppCompatActivity() {
         }
     }
 
+    private fun getFileFromUri(uri: Uri): File? {
+        return try {
+            val inputStream = contentResolver.openInputStream(uri)
+            val file = File(cacheDir, "temp_image_file_${System.currentTimeMillis()}")
+            val outputStream = FileOutputStream(file)
+            inputStream?.copyTo(outputStream)
+            inputStream?.close()
+            outputStream.close()
+            file
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         binding.signupButton.isEnabled = !isLoading
-        binding.usernameEditText.isEnabled = !isLoading
-        binding.passwordEditText.isEnabled = !isLoading
     }
 }

@@ -8,18 +8,31 @@
     android:padding="16dp"
     tools:context=".SignupActivity">
 
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/profileImageView"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"
+        android:src="@mipmap/ic_launcher_round"
+        app:layout_constraintBottom_toTopOf="@+id/titleTextView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Material3.Corner.Full" />
+
     <TextView
         android:id="@+id/titleTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="Create Account"
         android:textSize="28sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toTopOf="@+id/usernameInputLayout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toBottomOf="@+id/profileImageView" />
 
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/usernameInputLayout"
@@ -74,7 +87,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/passwordInputLayout" />
 
-    <!-- ADD THIS LOGIN TEXTVIEW -->
     <TextView
         android:id="@+id/loginTextView"
         android:layout_width="wrap_content"

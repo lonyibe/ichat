@@ -2,7 +2,6 @@ package com.arua.ichat
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -13,6 +12,7 @@ import androidx.lifecycle.lifecycleScope
 import com.arua.ichat.databinding.ActivityLoginBinding
 import com.arua.ichat.network.AuthRequest
 import com.arua.ichat.network.RetrofitClient
+import com.arua.ichat.network.TokenManager
 import kotlinx.coroutines.launch
 
 class LoginActivity : AppCompatActivity() {
@@ -21,18 +21,23 @@ class LoginActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge() // This enables the edge-to-edge display
+
+        // Check if a token already exists
+        if (TokenManager.getToken(this) != null) {
+            // If token exists, go straight to MainActivity
+            goToMainActivity()
+            return // Stop execution of the rest of onCreate
+        }
+
+        enableEdgeToEdge()
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // --- THIS IS THE FIX ---
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Apply the system bar dimensions as padding to the root view
             v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
             insets
         }
-        // --- END OF FIX ---
 
         binding.loginButton.setOnClickListener {
             val username = binding.usernameEditText.text.toString().trim()
@@ -58,13 +63,10 @@ class LoginActivity : AppCompatActivity() {
                 val response = RetrofitClient.instance.loginUser(AuthRequest(username, password))
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
+                    // Save the token
+                    TokenManager.saveToken(this@LoginActivity, authResponse.token)
                     Toast.makeText(this@LoginActivity, "Login Successful!", Toast.LENGTH_SHORT).show()
-                    Log.d("LoginActivity", "Token: ${authResponse.token}")
-
-                    val intent = Intent(this@LoginActivity, MainActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                    startActivity(intent)
-                    finish()
+                    goToMainActivity()
                 } else {
                     val errorBody = response.errorBody()?.string()
                     Toast.makeText(this@LoginActivity, "Login Failed: $errorBody", Toast.LENGTH_LONG).show()
@@ -75,6 +77,13 @@ class LoginActivity : AppCompatActivity() {
                 showLoading(false)
             }
         }
+    }
+
+    private fun goToMainActivity() {
+        val intent = Intent(this, MainActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish()
     }
 
     private fun showLoading(isLoading: Boolean) {

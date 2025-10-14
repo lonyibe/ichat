@@ -1,12 +1,18 @@
 package com.arua.ichat
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
 import com.arua.ichat.databinding.ActivityMainBinding
-import com.google.android.material.tabs.TabLayoutMediator
+import com.arua.ichat.fragments.CallsFragment
+import com.arua.ichat.fragments.ChatsFragment
+import com.arua.ichat.fragments.GroupsFragment
+import com.arua.ichat.fragments.SearchFragment // Import the new SearchFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,20 +26,40 @@ class MainActivity : AppCompatActivity() {
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Apply padding to the root layout
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            binding.bottomNavigation.updatePadding(bottom = systemBars.bottom)
             insets
         }
 
-        // Setup ViewPager and TabLayout
-        binding.viewPager.adapter = ViewPagerAdapter(this)
+        if (savedInstanceState == null) {
+            replaceFragment(ChatsFragment())
+        }
 
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            tab.text = when (position) {
-                0 -> "My Chats"
-                1 -> "Search Users"
-                else -> null
+        binding.bottomNavigation.setOnItemSelectedListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.navigation_chats -> {
+                    replaceFragment(ChatsFragment())
+                    true
+                }
+                R.id.navigation_groups -> {
+                    replaceFragment(GroupsFragment())
+                    true
+                }
+                R.id.navigation_calls -> {
+                    replaceFragment(CallsFragment())
+                    true
+                }
+                R.id.navigation_search -> {
+                    replaceFragment(SearchFragment()) // Show the SearchFragment
+                    true // Return true to show the item as selected
+                }
+                else -> false
             }
-        }.attach()
+        }
+    }
+
+    private fun replaceFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .commit()
     }
 }

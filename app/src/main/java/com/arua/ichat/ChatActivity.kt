@@ -5,6 +5,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import com.arua.ichat.databinding.ActivityChatBinding
 
 class ChatActivity : AppCompatActivity() {
@@ -22,11 +23,20 @@ class ChatActivity : AppCompatActivity() {
         binding = ActivityChatBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // --- THIS IS THE FIX ---
         ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
-            insets
+
+            // Apply the top inset as padding to the Toolbar
+            binding.toolbar.updatePadding(top = systemBars.top)
+
+            // Apply the bottom inset as padding to the message input layout
+            binding.inputLayout.updatePadding(bottom = systemBars.bottom)
+
+            // Consume the insets
+            WindowInsetsCompat.CONSUMED.consumeSystemWindowInsets()
         }
+        // --- END OF FIX ---
 
         val username = intent.getStringExtra(EXTRA_USERNAME)
 

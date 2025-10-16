@@ -3,8 +3,7 @@ package com.arua.ichat
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
-import android.view.View
+import android.view.View // THIS IS THE FIX: Import the View class
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.enableEdgeToEdge
@@ -87,7 +86,7 @@ class SignupActivity : AppCompatActivity() {
                 val response = RetrofitClient.instance.signupUser(usernamePart, passwordPart, imagePart)
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
-                    TokenManager.saveToken(this@SignupActivity, authResponse.token)
+                    TokenManager.saveAuthData(this@SignupActivity, authResponse.token, authResponse._id)
                     Toast.makeText(this@SignupActivity, "Account Created!", Toast.LENGTH_SHORT).show()
 
                     val intent = Intent(this@SignupActivity, MainActivity::class.java)

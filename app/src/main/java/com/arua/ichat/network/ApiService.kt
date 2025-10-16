@@ -9,6 +9,7 @@ import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface ApiService {
@@ -35,4 +36,21 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Body request: CreateChatRequest
     ): Response<ChatResponse>
+
+    @GET("api/message/{chatId}")
+    suspend fun getMessages(
+        @Header("Authorization") token: String,
+        @Path("chatId") chatId: String
+    ): Response<List<Message>>
+
+    @POST("api/message")
+    suspend fun sendMessage(
+        @Header("Authorization") token: String,
+        @Body request: SendMessageRequest
+    ): Response<Message>
+
+    @GET("api/chat")
+    suspend fun fetchChats(
+        @Header("Authorization") token: String
+    ): Response<List<FullChatResponse>>
 }

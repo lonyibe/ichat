@@ -22,11 +22,9 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Check if a token already exists
         if (TokenManager.getToken(this) != null) {
-            // If token exists, go straight to MainActivity
             goToMainActivity()
-            return // Stop execution of the rest of onCreate
+            return
         }
 
         enableEdgeToEdge()
@@ -63,8 +61,8 @@ class LoginActivity : AppCompatActivity() {
                 val response = RetrofitClient.instance.loginUser(AuthRequest(username, password))
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
-                    // Save the token
-                    TokenManager.saveToken(this@LoginActivity, authResponse.token)
+                    // Use the correct function to save both token and user ID
+                    TokenManager.saveAuthData(this@LoginActivity, authResponse.token, authResponse._id)
                     Toast.makeText(this@LoginActivity, "Login Successful!", Toast.LENGTH_SHORT).show()
                     goToMainActivity()
                 } else {

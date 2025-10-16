@@ -35,10 +35,8 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // This is the fix for the status bar overlap
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            // Apply the top system bar inset as padding to the entire fragment's view
             v.updatePadding(top = systemBars.top)
             insets
         }
@@ -87,9 +85,11 @@ class SearchFragment : Fragment() {
             try {
                 val response = RetrofitClient.instance.accessChat(token, CreateChatRequest(user._id))
                 showLoading(false)
-                if (response.isSuccessful) {
+                if (response.isSuccessful && response.body() != null) {
+                    val chat = response.body()!!
                     val intent = Intent(requireContext(), ChatActivity::class.java).apply {
-                        putExtra(ChatActivity.EXTRA_USER_ID, user._id)
+                        // FIX: Refer to the constant via the ChatActivity class
+                        putExtra(ChatActivity.EXTRA_CHAT_ID, chat._id)
                         putExtra(ChatActivity.EXTRA_USERNAME, user.username)
                     }
                     startActivity(intent)

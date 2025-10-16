@@ -33,7 +33,6 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
-    // Enable ViewBinding
     buildFeatures {
         viewBinding = true
     }
@@ -46,14 +45,15 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-
-    // ViewPager2 for tabs
-    implementation("androidx.viewpager2:viewpager2:1.1.0")
+    implementation("androidx.viewpager2:viewpager2:1.1.0") // This can be removed if you cleaned up old files, but is harmless.
 
     // Networking with Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
+
+    // Real-time with Socket.IO
+    implementation("io.socket:socket.io-client:2.0.1")
 
     // Coroutines for asynchronous programming
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.1")

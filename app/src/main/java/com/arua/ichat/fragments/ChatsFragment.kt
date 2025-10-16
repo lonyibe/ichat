@@ -24,6 +24,10 @@ class ChatsFragment : Fragment() {
     private var _binding: FragmentChatsBinding? = null
     private val binding get() = _binding!!
 
+    // Keep a reference to the list to clear it
+    private val chatList = mutableListOf<FullChatResponse>()
+    private lateinit var chatAdapter: ChatAdapter
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -41,7 +45,13 @@ class ChatsFragment : Fragment() {
             insets
         }
 
+        setupRecyclerView()
         fetchUserChats()
+    }
+
+    private fun setupRecyclerView() {
+        chatAdapter = ChatAdapter(chatList, ::onChatClicked)
+        binding.chatsRecyclerView.adapter = chatAdapter
     }
 
     private fun fetchUserChats() {
@@ -60,7 +70,10 @@ class ChatsFragment : Fragment() {
                     } else {
                         binding.emptyTextView.visibility = View.GONE
                         binding.chatsRecyclerView.visibility = View.VISIBLE
-                        binding.chatsRecyclerView.adapter = ChatAdapter(chats, ::onChatClicked)
+                        // Clear the list before adding new items to prevent duplicates
+                        chatList.clear()
+                        chatList.addAll(chats)
+                        chatAdapter.notifyDataSetChanged()
                     }
                 } else {
                     Toast.makeText(requireContext(), "Failed to load chats", Toast.LENGTH_SHORT).show()
@@ -74,11 +87,13 @@ class ChatsFragment : Fragment() {
 
     private fun onChatClicked(chat: FullChatResponse) {
         val currentUserId = TokenManager.getUserId(requireContext())
+        // For 1-on-1 chats, find the other user to pass their name to the ChatActivity
         val otherUser = chat.users.find { it._id != currentUserId }
 
         val intent = Intent(requireContext(), ChatActivity::class.java).apply {
             putExtra(ChatActivity.EXTRA_CHAT_ID, chat._id)
-            putExtra(ChatActivity.EXTRA_USERNAME, otherUser?.username ?: chat.chatName ?: "Chat")
+            val chatName = if (chat.isGroupChat) chat.chatName else otherUser?.username
+            putExtra(ChatActivity.EXTRA_USERNAME, chatName ?: "Chat")
         }
         startActivity(intent)
     }
@@ -92,9 +107,5 @@ class ChatsFragment : Fragment() {
         _binding = null
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Refresh the chat list every time the user returns to this screen
-        fetchUserChats()
-    }
+    // The onResume method has been removed to prevent automatic reloading and race conditions.
 }

@@ -19,26 +19,28 @@ class ChatAdapter(
         fun bind(chat: FullChatResponse) {
             val currentUserId = TokenManager.getUserId(itemView.context)
 
-            // Determine the display name and picture
             val displayName: String
-            val displayPic: String
+            var displayPicUrl: String
 
             if (chat.isGroupChat) {
                 displayName = chat.chatName ?: "Group Chat"
-                // For groups, you might have a default group icon or a specific group picture field
-                displayPic = "https://icon-library.com/images/group-icon-png/group-icon-png-10.jpg" // Placeholder
+                displayPicUrl = "https://icon-library.com/images/group-icon-png/group-icon-png-10.jpg" // Placeholder
             } else {
-                // For 1-on-1 chats, find the other user
                 val otherUser = chat.users.find { it._id != currentUserId }
                 displayName = otherUser?.username ?: "Unknown User"
-                displayPic = otherUser?.pic ?: ""
+                displayPicUrl = otherUser?.pic ?: ""
             }
 
             binding.usernameTextView.text = displayName
             binding.latestMessageTextView.text = chat.latestMessage?.content ?: "No messages yet"
 
+            // FIX: Check if the URL is absolute or relative
+            if (!displayPicUrl.startsWith("http")) {
+                displayPicUrl = "http://104.225.141.13:5000$displayPicUrl"
+            }
+
             Glide.with(itemView.context)
-                .load("http://104.225.141.13:5000${displayPic}")
+                .load(displayPicUrl)
                 .placeholder(R.mipmap.ic_launcher_round)
                 .error(R.mipmap.ic_launcher_round)
                 .into(binding.profileImageView)

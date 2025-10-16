@@ -23,11 +23,16 @@ class UserAdapter(
             usernameTextView.text = user.username
             itemView.setOnClickListener { onItemClick(user) }
 
-            // Use Glide to load the image from the full server URL
+            // FIX: Check if the URL is absolute or relative
+            var displayPicUrl = user.pic
+            if (!displayPicUrl.startsWith("http")) {
+                displayPicUrl = "http://104.225.141.13:5000$displayPicUrl"
+            }
+
             Glide.with(itemView.context)
-                .load("http://104.225.141.13:5000${user.pic}")
-                .placeholder(R.mipmap.ic_launcher_round) // Default image while loading
-                .error(R.mipmap.ic_launcher_round) // Image to show if loading fails
+                .load(displayPicUrl)
+                .placeholder(R.mipmap.ic_launcher_round)
+                .error(R.mipmap.ic_launcher_round)
                 .into(profileImageView)
         }
     }

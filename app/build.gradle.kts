@@ -45,7 +45,6 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation("androidx.viewpager2:viewpager2:1.1.0") // This can be removed if you cleaned up old files, but is harmless.
 
     // Networking with Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

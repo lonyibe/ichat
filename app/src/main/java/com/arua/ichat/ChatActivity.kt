@@ -16,6 +16,7 @@ import com.google.gson.Gson
 import io.socket.client.IO
 import io.socket.client.Socket
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 
 class ChatActivity : AppCompatActivity() {
 
@@ -56,13 +57,17 @@ class ChatActivity : AppCompatActivity() {
         setupRecyclerView()
         setupSocket()
 
-        chatId?.let {
-            fetchMessages(it)
+        if (chatId == null) {
+            Toast.makeText(this, "Error: Chat ID not found", Toast.LENGTH_LONG).show()
+            finish()
+            return
         }
+
+        fetchMessages(chatId!!)
 
         binding.sendButton.setOnClickListener {
             val content = binding.messageEditText.text.toString().trim()
-            if (content.isNotEmpty() && chatId != null) {
+            if (content.isNotEmpty()) {
                 sendMessage(chatId!!, content)
                 binding.messageEditText.text.clear()
             }
@@ -85,16 +90,19 @@ class ChatActivity : AppCompatActivity() {
 
     private fun setupSocket() {
         try {
+            // Ensure you use your VPS IP here
             mSocket = IO.socket("http://104.225.141.13:5000")
         } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(this, "Socket connection error", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Cannot connect to server", Toast.LENGTH_SHORT).show()
+            return
         }
 
         mSocket.on(Socket.EVENT_CONNECT) {
             Log.d("Socket.IO", "Connected!")
             val userId = TokenManager.getUserId(this)
-            mSocket.emit("setup", "{\"_id\":\"$userId\"}")
+            val userJson = JSONObject().put("_id", userId)
+            mSocket.emit("setup", userJson)
             chatId?.let { mSocket.emit("join chat", it) }
         }
 
@@ -103,10 +111,13 @@ class ChatActivity : AppCompatActivity() {
                 try {
                     val messageJson = args[0].toString()
                     val message = Gson().fromJson(messageJson, Message::class.java)
-                    messageAdapter.addMessage(message)
-                    binding.messagesRecyclerView.scrollToPosition(messageList.size - 1)
+                    // Add message only if it belongs to the current chat
+                    if (message.chat._id == chatId) {
+                        messageAdapter.addMessage(message)
+                        binding.messagesRecyclerView.scrollToPosition(messageList.size - 1)
+                    }
                 } catch (e: Exception) {
-                    Log.e("Socket.IO", "Error parsing message", e)
+                    Log.e("Socket.IO", "Error parsing received message", e)
                 }
             }
         }
@@ -126,7 +137,7 @@ class ChatActivity : AppCompatActivity() {
                     binding.messagesRecyclerView.scrollToPosition(messageList.size - 1)
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@ChatActivity, "Failed to load messages", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ChatActivity, "Failed to load messages: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -138,15 +149,14 @@ class ChatActivity : AppCompatActivity() {
                 val response = RetrofitClient.instance.sendMessage(token, SendMessageRequest(chatId, content))
                 if (response.isSuccessful && response.body() != null) {
                     val sentMessage = response.body()!!
-                    // Emit the message via socket so the server can relay it
-                    mSocket.emit("new message", Gson().toJson(sentMessage))
-
-                    // Also add the message to our own UI instantly
+                    // Add the message to our own UI instantly
                     messageAdapter.addMessage(sentMessage)
                     binding.messagesRecyclerView.scrollToPosition(messageList.size - 1)
+                    // Emit the message via socket so the server can relay it to the other user
+                    mSocket.emit("new message", Gson().toJson(sentMessage))
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@ChatActivity, "Failed to send message", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@ChatActivity, "Failed to send message: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
